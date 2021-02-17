@@ -13,8 +13,8 @@ import {
   makeStyles
 } from '@material-ui/core';
 import { Search as SearchIcon } from 'react-feather';
-import CreateNewClient from '../../../components/newClient';
-import ModalElement from '../../../components/Modal';
+import NewPacient from '../../components/newPacient';
+import ModalElement from '../../components/Modal';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Toolbar = ({
-  className, setActualizarUser, setSearchUser, ...rest
+  className, setActualizarPacient, setSearchPacient, ...rest
 }) => {
   const [modal, setModal] = useState(false);
   const classes = useStyles();
@@ -46,7 +46,7 @@ const Toolbar = ({
           variant="contained"
           onClick={() => setModal(true)}
         >
-          Nuevo cliente
+          Nuevo paciente
         </Button>
       </Box>
       <Box mt={3}>
@@ -55,7 +55,7 @@ const Toolbar = ({
             <Box maxWidth={500}>
               <TextField
                 fullWidth
-                onChange={(event) => setSearchUser(event.target.value)}
+                onChange={(event) => setSearchPacient(event.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -68,7 +68,7 @@ const Toolbar = ({
                     </InputAdornment>
                   )
                 }}
-                placeholder="Buscar Cliente"
+                placeholder="Buscar pacientes"
                 variant="outlined"
               />
             </Box>
@@ -77,7 +77,7 @@ const Toolbar = ({
       </Box>
 
       <ModalElement visible={modal} setVisible={setModal}>
-        <CreateNewClient setActualizarUser={setActualizarUser} />
+        <NewPacient setActualizarPacient={setActualizarPacient} />
       </ModalElement>
     </div>
   );

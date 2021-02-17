@@ -1,20 +1,21 @@
-import React from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import * as Yup from 'yup';
-import { Formik } from 'formik';
+import React, { useState } from 'react';
+import Cookies from 'js-cookie';
 import {
   Box,
   Button,
+  Snackbar,
   Container,
   Grid,
-  Link,
-  TextField,
-  Typography,
   makeStyles
 } from '@material-ui/core';
+import Alert from '@material-ui/lab/Alert';
 import FacebookIcon from 'src/icons/Facebook';
 import GoogleIcon from 'src/icons/Google';
+import { useDispatch } from 'react-redux';
 import Page from 'src/components/Page';
+import { LoginUser } from '../../api/users';
+import { SetSesion } from '../../lib/redux/me';
+import { loginWithGoogle } from '../../utils/firebase';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,165 +27,117 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const LoginView = () => {
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const classes = useStyles();
-  const navigate = useNavigate();
+  const [visible, setVisible] = useState(false);
+  const [feedback, setFeedback] = useState({
+    type: '',
+    content: '',
+  });
+
+  const loginGoogle = () => {
+    setLoading(true);
+    setVisible(true);
+
+    setFeedback({
+      type: 'info',
+      content: 'Este acceso es solo para personas autorizadas o con mascotas registradas.'
+    });
+
+    try {
+      loginWithGoogle()
+        .then(async (user) => {
+          const GoogleMe = {
+            email: user.email,
+            avatar: user.photoURL,
+            userName: user.displayName,
+            provider: 'google',
+          };
+
+          const responseLogin = await LoginUser(GoogleMe);
+          Cookies.set('access-token', responseLogin.data.me.token);
+          dispatch(SetSesion(GoogleMe));
+          window.location.href = '/app/dashboard';
+        }).catch((error) => {
+          setLoading(false);
+          setVisible(true);
+          setFeedback({
+            type: 'error',
+            content: error.message
+          });
+        });
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setVisible(true);
+      setFeedback({
+        type: 'error',
+        content: error.message
+      });
+    }
+  };
 
   return (
-    <Page
-      className={classes.root}
-      title="Login"
-    >
-      <Box
-        display="flex"
-        flexDirection="column"
-        height="100%"
-        justifyContent="center"
+    <>
+      <Page
+        className={classes.root}
+        title="Login"
       >
-        <Container maxWidth="sm">
-          <Formik
-            initialValues={{
-              email: 'demo@devias.io',
-              password: 'Password123'
-            }}
-            validationSchema={Yup.object().shape({
-              email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-              password: Yup.string().max(255).required('Password is required')
-            })}
-            onSubmit={() => {
-              navigate('/app/dashboard', { replace: true });
-            }}
-          >
-            {({
-              errors,
-              handleBlur,
-              handleChange,
-              handleSubmit,
-              isSubmitting,
-              touched,
-              values
-            }) => (
-              <form onSubmit={handleSubmit}>
-                <Box mb={3}>
-                  <Typography
-                    color="textPrimary"
-                    variant="h2"
-                  >
-                    Sign in
-                  </Typography>
-                  <Typography
-                    color="textSecondary"
-                    gutterBottom
-                    variant="body2"
-                  >
-                    Sign in on the internal platform
-                  </Typography>
-                </Box>
-                <Grid
-                  container
-                  spacing={3}
-                >
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                  >
-                    <Button
-                      color="primary"
-                      fullWidth
-                      startIcon={<FacebookIcon />}
-                      onClick={handleSubmit}
-                      size="large"
-                      variant="contained"
-                    >
-                      Login with Facebook
-                    </Button>
-                  </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                  >
-                    <Button
-                      fullWidth
-                      startIcon={<GoogleIcon />}
-                      onClick={handleSubmit}
-                      size="large"
-                      variant="contained"
-                    >
-                      Login with Google
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Box
-                  mt={3}
-                  mb={1}
-                >
-                  <Typography
-                    align="center"
-                    color="textSecondary"
-                    variant="body1"
-                  >
-                    or login with email address
-                  </Typography>
-                </Box>
-                <TextField
-                  error={Boolean(touched.email && errors.email)}
+        {loading}
+        <Box
+          display="flex"
+          flexDirection="column"
+          height="100%"
+          justifyContent="center"
+        >
+          <Container maxWidth="sm">
+            <Grid
+              container
+              spacing={3}
+            >
+              <Grid
+                item
+                xs={12}
+                md={6}
+              >
+                <Button
+                  color="primary"
                   fullWidth
-                  helperText={touched.email && errors.email}
-                  label="Email Address"
-                  margin="normal"
-                  name="email"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  type="email"
-                  value={values.email}
-                  variant="outlined"
-                />
-                <TextField
-                  error={Boolean(touched.password && errors.password)}
-                  fullWidth
-                  helperText={touched.password && errors.password}
-                  label="Password"
-                  margin="normal"
-                  name="password"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  type="password"
-                  value={values.password}
-                  variant="outlined"
-                />
-                <Box my={2}>
-                  <Button
-                    color="primary"
-                    disabled={isSubmitting}
-                    fullWidth
-                    size="large"
-                    type="submit"
-                    variant="contained"
-                  >
-                    Sign in now
-                  </Button>
-                </Box>
-                <Typography
-                  color="textSecondary"
-                  variant="body1"
+                  startIcon={<FacebookIcon />}
+                  onClick={() => false}
+                  size="large"
+                  variant="contained"
                 >
-                  Don&apos;t have an account?
-                  {' '}
-                  <Link
-                    component={RouterLink}
-                    to="/register"
-                    variant="h6"
-                  >
-                    Sign up
-                  </Link>
-                </Typography>
-              </form>
-            )}
-          </Formik>
-        </Container>
-      </Box>
-    </Page>
+                  Login with Facebook
+                </Button>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                md={6}
+              >
+                <Button
+                  fullWidth
+                  startIcon={<GoogleIcon />}
+                  onClick={loginGoogle}
+                  size="large"
+                  variant="contained"
+                >
+                  Login with Google
+                </Button>
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
+      </Page>
+
+      <Snackbar open={visible} autoHideDuration={6000} onClose={() => setVisible(false)}>
+        <Alert onClose={() => setVisible(false)} severity={feedback.type}>
+          {feedback.content}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

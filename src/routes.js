@@ -8,19 +8,33 @@ import DashboardView from 'src/views/reports/DashboardView';
 import LoginView from 'src/views/auth/LoginView';
 import NotFoundView from 'src/views/errors/NotFoundView';
 import ProductListView from 'src/views/product/ProductListView';
+import PacientListView from 'src/views/pacient';
 import RegisterView from 'src/views/auth/RegisterView';
 import SettingsView from 'src/views/settings/SettingsView';
+import PacientView from 'src/views/pacient/ID';
+import Cookies from 'js-cookie';
+
+const token = Cookies.get('access-token');
+
+const PathSesion = (Componente) => {
+  if (token) {
+    return <Componente />;
+  }
+  return <Navigate to="/login" />;
+};
 
 const routes = [
   {
     path: 'app',
     element: <DashboardLayout />,
     children: [
-      { path: 'account', element: <AccountView /> },
-      { path: 'customers', element: <CustomerListView /> },
-      { path: 'dashboard', element: <DashboardView /> },
-      { path: 'products', element: <ProductListView /> },
-      { path: 'settings', element: <SettingsView /> },
+      { path: 'account', element: PathSesion(AccountView) },
+      { path: 'customers', element: PathSesion(CustomerListView) },
+      { path: 'dashboard', element: PathSesion(DashboardView) },
+      { path: 'products', element: PathSesion(ProductListView) },
+      { path: 'settings', element: PathSesion(SettingsView) },
+      { path: 'pacient', element: PathSesion(PacientListView) },
+      { path: 'pacient/:idPacient', element: PathSesion(PacientView) },
       { path: '*', element: <Navigate to="/404" /> }
     ]
   },

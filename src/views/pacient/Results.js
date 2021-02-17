@@ -1,6 +1,5 @@
-/* eslint-disable no-unused-expressions */
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import moment from 'moment';
@@ -11,7 +10,6 @@ import {
   Card,
   Checkbox,
   Table,
-  Button,
   TableBody,
   TableCell,
   TableHead,
@@ -21,9 +19,6 @@ import {
   makeStyles
 } from '@material-ui/core';
 import getInitials from 'src/utils/getInitials';
-import AlertDialog from '../../../components/dialogo';
-import { TokenContext } from '../../../lib/context/contextToken';
-import { DeleteUser } from '../../../api/users';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -33,22 +28,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Results = ({
-  className, customers, setActualizarUser, searchUser, ...rest
+  className, pacient, searchPacient, ...rest
 }) => {
   const classes = useStyles();
-  const [dialogo, setDialogo] = useState(false);
-  const [isDelete, setIsDelete] = useState(false);
-  const [idUser, setIdUser] = useState('');
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(0);
-  const { token } = useContext(TokenContext);
 
   const handleSelectAll = (event) => {
     let newSelectedCustomerIds;
 
     if (event.target.checked) {
-      newSelectedCustomerIds = customers.map((customer) => customer.id);
+      newSelectedCustomerIds = pacient.map((customer) => customer.id);
     } else {
       newSelectedCustomerIds = [];
     }
@@ -84,19 +75,6 @@ const Results = ({
     setPage(newPage);
   };
 
-  useEffect(() => {
-    try {
-      const deleteUser = async () => {
-        await DeleteUser(token, idUser);
-        setActualizarUser(true);
-      };
-
-      idUser && isDelete && deleteUser();
-    } catch (error) {
-      console.log(error.message);
-    }
-  }, [idUser, isDelete]);
-
   return (
     <Card
       className={clsx(classes.root, className)}
@@ -109,11 +87,11 @@ const Results = ({
               <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    checked={selectedCustomerIds.length === customers.length}
+                    checked={selectedCustomerIds.length === pacient.length}
                     color="primary"
                     indeterminate={
                       selectedCustomerIds.length > 0
-                      && selectedCustomerIds.length < customers.length
+                      && selectedCustomerIds.length < pacient.length
                     }
                     onChange={handleSelectAll}
                   />
@@ -122,36 +100,36 @@ const Results = ({
                   Name
                 </TableCell>
                 <TableCell>
-                  Email
+                  Email Dueño
                 </TableCell>
                 <TableCell>
-                  Proveedor
+                  Altura
                 </TableCell>
                 <TableCell>
-                  Phone
+                  Peso
                 </TableCell>
                 <TableCell>
-                  Registration date
+                  Animal
                 </TableCell>
                 <TableCell>
-                  Opciones
+                  Registrado el
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {customers.filter((item) => {
-                return item.userName.toLowerCase().includes(searchUser.toLowerCase())
-                || item.email.toLowerCase().includes(searchUser.toLowerCase());
-              }).map((customer) => (
+              {pacient.filter((item) => {
+                return item.nombre.toLowerCase().includes(searchPacient.toLowerCase())
+                || item.emailPerson.toLowerCase().includes(searchPacient.toLowerCase());
+              }).map((paciente) => (
                 <TableRow
                   hover
-                  key={customer.idUser}
-                  selected={selectedCustomerIds.indexOf(customer.idUser) !== -1}
+                  key={paciente.idUser}
+                  selected={selectedCustomerIds.indexOf(paciente.idUser) !== -1}
                 >
                   <TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedCustomerIds.indexOf(customer.idUser) !== -1}
-                      onChange={(event) => handleSelectOne(event, customer.idUser)}
+                      checked={selectedCustomerIds.indexOf(paciente.idUser) !== -1}
+                      onChange={(event) => handleSelectOne(event, paciente.idUser)}
                       value="true"
                     />
                   </TableCell>
@@ -162,45 +140,32 @@ const Results = ({
                     >
                       <Avatar
                         className={classes.avatar}
-                        src={customer.avatar}
+                        src={paciente.avatar}
                       >
-                        {getInitials(customer.userName)}
+                        {getInitials(paciente.nombre)}
                       </Avatar>
                       <Typography
                         color="textPrimary"
                         variant="body1"
                       >
-                        {customer.userName}
+                        {paciente.nombre || 'Sin Nombre'}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {customer.email}
+                    {paciente.emailPerson || 'Sin Dueño'}
                   </TableCell>
                   <TableCell>
-                    {customer.provider}
+                    {paciente.altura}
                   </TableCell>
                   <TableCell>
-                    {customer.Phone || 'Ninnguno'}
+                    {paciente.peso}
                   </TableCell>
                   <TableCell>
-                    {moment(customer.created_at).format('DD/MM/YYYY')}
+                    {paciente.tipo}
                   </TableCell>
                   <TableCell>
-                    <Button size="small" variant="contained" color="primary">
-                      Editar
-                    </Button>
-                    &nbsp; &nbsp;
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => {
-                        setDialogo(true);
-                        setIdUser(customer.idUser);
-                      }}
-                    >
-                      ELiminar
-                    </Button>
+                    {moment(paciente.created_at).format('DD/MM/YYYY')}
                   </TableCell>
                 </TableRow>
               ))}
@@ -210,16 +175,13 @@ const Results = ({
       </PerfectScrollbar>
       <TablePagination
         component="div"
-        count={customers.length}
+        count={pacient.length}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}
         rowsPerPage={limit}
         rowsPerPageOptions={[5, 10, 25]}
       />
-      <AlertDialog visible={dialogo} setVisible={setDialogo} setIsDelete={setIsDelete}>
-        <p>Estas seguro que quieres eliminar este registro?, uns vez echo sera irrecuperable.</p>
-      </AlertDialog>
     </Card>
   );
 };
